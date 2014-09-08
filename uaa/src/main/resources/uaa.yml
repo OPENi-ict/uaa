@@ -3,16 +3,29 @@
 # [$UAA_CONFIG_URL, $UAA_CONFIG_PATH/uaa.yml, $CLOUDFOUNDRY_CONFIG_PATH/uaa.yml]
 
 #spring_profiles: mysql,default
-#spring_profiles: postgresql,default
+spring_profiles: postgresql,default
 #spring_profiles: ldap,default,hsqldb
 #spring_profiles: saml
 #spring_profiles: keystone,default,hsqldb
 
-#database:
-#  driverClassName: org.postgresql.Driver
-#  url: jdbc:postgresql:uaa
-#  username: root
-#  password: changeme
+database:
+  driverClassName: org.postgresql.Driver
+  url: jdbc:postgresql:uaa
+  username: postgres
+  password: fb20c47bffebca63
+
+scim:
+  users:
+    - root|fb20c47bffebca63|info@openi-ict.eu|||uaa.user,uaa.admin,scim.write,scim.read,clients.read,clients.write,clients.secret,clients.admin
+
+oauth:
+  clients:
+    admin:
+      id: admin
+      secret: fb20c47bffebca63
+      authorized-grant-types: client_credentials
+      scope: none
+      authorities: uaa.admin,scim.write,scim.read,clients.read,clients.write,clients.secret,clients.admin
 
 #note - this is not the place to set these properties
 # - they are just here for documentation purposes
