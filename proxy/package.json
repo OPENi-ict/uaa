@@ -1,7 +1,6 @@
-http-proxy
 {
 	"name":"Uaa proxy",
-	"description":"Cloudlet platform",
+	"description":"Uaa proxy",
 	"version":"0.1.0",
 	"homepage":"openi-ict.eu",
 	"author":{
