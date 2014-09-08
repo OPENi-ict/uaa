@@ -7,4 +7,3 @@ cp uaa/build/libs/cloudfoundry-identity-uaa-1.8.3.war /var/lib/tomcat7/webapps/
 
 cd proxy
 npm install --no-bin-links
-supervisor proxy.js&
