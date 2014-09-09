@@ -138,7 +138,7 @@ var app = connect()
 	next();
 })
 .use(bodyParser.json())
-.use('/api/v1/uaa/login', function(req, res, next)
+.use('/uaa/login', function(req, res, next)
 {
 	if(req.method === 'POST' && req.body['name'] !== undefined && req.body['password'] !== undefined)
 	{
@@ -163,7 +163,7 @@ var app = connect()
 	else
 		next();
 })
-.use('/api/v1/uaa/logout', function (req, res, next)
+.use('/uaa/logout', function (req, res, next)
 {
 	if(req.method === 'POST' && req.body['session'] !== null)
 	{
@@ -175,7 +175,7 @@ var app = connect()
 	else
 		next();
 })
-.use('/api/v1/uaa/oauth/authorize', function (req, res, next)
+.use('/uaa/oauth/authorize', function (req, res, next)
 {
 	if(req.method === 'POST' && req.body['session'] !== null && req.body['client'] !== null && req.body['scopes'] !== null)
 	{
