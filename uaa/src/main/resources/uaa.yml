@@ -14,19 +14,6 @@ database:
   username: postgres
   password: fb20c47bffebca63
 
-scim:
-  users:
-    - root|fb20c47bffebca63|info@openi-ict.eu|||uaa.user,uaa.admin,scim.write,scim.read,clients.read,clients.write,clients.secret,clients.admin
-
-oauth:
-  clients:
-    admin:
-      id: admin
-      secret: fb20c47bffebca63
-      authorized-grant-types: client_credentials
-      scope: none
-      authorities: uaa.admin,scim.write,scim.read,clients.read,clients.write,clients.secret,clients.admin
-
 #note - this is not the place to set these properties
 # - they are just here for documentation purposes
 #database.driverClassName: org.postgresql.Driver
@@ -101,14 +88,38 @@ oauth:
 #    passwordEncoder: org.cloudfoundry.identity.uaa.login.ldap.DynamicPasswordComparator
 #    localPasswordCompare: true
 
+scim:
+  users:
+    - root|fb20c47bffebca63|info@openi-ict.eu|||uaa.user,uaa.admin,scim.write,scim.read,clients.read,clients.write,clients.secret,clients.admin
+
 oauth:
+  clients:
+    admin:
+      id: admin
+      secret: fb20c47bffebca63
+#      authorized-grant-types: client_credentials
+#      scope: none
+#      authorities: uaa.admin,scim.write,scim.read,clients.read,clients.write,clients.secret,clients.admin
+    app:
+      id: app
+      secret: fb20c47bffebca63
+    login:
+      id: login
+      secret: fb20c47bffebca63
+    dashboard:
+      id: dashboard
+      secret: fb20c47bffebca63
+    cf:
+      id: cf
+      secret: fb20c47bffebca63
+#oauth:
   user:
     authorities:
       - openid
       - scim.me
-      - cloud_controller.read
-      - cloud_controller.write
-      - cloud_controller_service_permissions.read
+#      - cloud_controller.read
+#      - cloud_controller.write
+#      - cloud_controller_service_permissions.read
       - password.write
       - scim.userids
       - uaa.user
