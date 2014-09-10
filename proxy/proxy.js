@@ -27,21 +27,20 @@ function loginRequest(user, pass, cb)
 		host: targetHost,
 		path: '/uaa/login.do',
 		port: targetPort,
-		/*rejectUnauthorized: false,
-		requestCert: true,
-		agent: false,*/
 		method: 'POST',
 		headers: {'content-type': 'application/x-www-form-urlencoded'}
 	},
 	function(res)
 	{
-		cb((res.headers['set-cookie'] + '').match(/JSESSIONID\=(.*?)\;/)[1]);
+		if(res.headers['location'].indexOf('error') < 0)
+			return cb(res.statusCode, (res.headers['set-cookie'] + '').match(/JSESSIONID\=(.*?)\;/)[1]);
+		cb(400);
 	});
 	req.write('username=' + user + '&password=' + pass);
 	req.end();
 }
 
-function logoutRequest(session)
+function logoutRequest(session, cb)
 {
 	var req = http.request(
 	{
@@ -53,62 +52,132 @@ function logoutRequest(session)
 	},
 	function(res)
 	{
-
+		if(cb)
+			cb(res.statusCode)
 	});
 	req.end();
 }
 
-function createUserRequest(token, cb)
+function getAdminToken(cb)
 {
 	var req = http.request(
 	{
 		host: targetHost,
-		path: '/uaa/oauth/clients/moo',
+		path: '/uaa/oauth/token',
 		port: targetPort,
 		method: 'POST',
-		headers: {} //{'cookie': 'JSESSIONID=' + encodeURIComponent(session)}
+		headers:
+		{
+			'Content-Type': 'application/x-www-form-urlencoded',
+			//'Authorization': 'Basic Y2Y6ZmIyMGM0N2JmZmViY2E2Mw=='
+			//'Authorization': 'Basic YWRtaW46ZmIyMGM0N2JmZmViY2E2Mw=='
+			'Authorization': 'Basic b3Blbmk6ZmIyMGM0N2JmZmViY2E2Mw=='
+		}
 	},
 	function(res)
 	{
 		rawBody(res,
 		{
 			length: res.headers['content-length'],
-			limit: '1mb' //,
+			limit: '1mb'
+		},
+		function (err, string)
+		{
+			if (err)
+				return cb(res.statusCode);
+			cb(res.statusCode, JSON.parse(string));
+		});
+	});
+	//req.write('username=root&password=fb20c47bffebca63&client_id=cf&grant_type=password');
+	//req.write('username=root&password=fb20c47bffebca63&client_id=admin&grant_type=password');
+	req.write('username=root&password=fb20c47bffebca63&client_id=openi&grant_type=password');
+	req.end();
+}
+
+function createUserRequest(token, username, password, cb)
+{
+	var req = http.request(
+	{
+		host: targetHost,
+		path: '/uaa/Users',
+		port: targetPort,
+		method: 'POST',
+		headers:
+		{
+			'Content-Type': 'application/json',
+			'Authorization': 'Bearer ' + token
+		} 
+	},
+	function(res)
+	{
+		rawBody(res,
+		{
+			length: res.headers['content-length'],
+			limit: '1mb'
+		},
+		function (err, string)
+		{
+			if (err)
+				return cb(res.statusCode);
+			cb(res.statusCode, string);
+		});
+	});
+	req.write('{"schemas":["urn:scim:schemas:core:1.0"],"password":"' + password + '","emails":[{"value":"email@example.org"}],"userName":"' + username + '"}');
+	req.end();
+}
+
+function createClientRequest(token, client_id, cb)
+{
+	var req = http.request(
+	{
+		host: targetHost,
+		path: '/uaa/oauth/clients', // + client_id,
+		port: targetPort,
+		method: 'POST',
+		headers:
+		{
+			'Content-Type': 'application/json',
+			'Authorization': 'Bearer ' + token
+		} 
+	},
+	function(res)
+	{
+		rawBody(res,
+		{
+			length: res.headers['content-length'],
+			limit: '1mb'//,
 			//encoding: typer.parse(res.headers['content-type']).parameters.charset
 		},
 		function (err, string)
 		{
 			if (err)
-				return cb(err); //next(err)
-			//req.text = string;
-			//next();
-			cb(string);
+				return cb(res.statusCode);
+			cb(res.statusCode, JSON.stringify(string.toString()));
 		});
 	});
+	//req.write('{"client_id":"' + client_id + '","client_secret":"fb20c47bffebca63","scope":["uaa.none"],"resource_ids":["none"],"authorities":["openid"],"authorized_grant_types" : ["authorization_code","client_credentials","password","refresh_token"], "access_token_validity": 43200}');
+	req.write('{"client_id":"' + client_id + '","scope":["openid"],"resource_ids":["none"],"authorities":["openid"],"authorized_grant_types":["implicit","password","refresh_token"],"autoapprove":"true"}');
 	req.end();
 }
 
-function authorizeRequest(session, client, scopes, cb)
+function authorizeRequest(session, client_id, cb)
 {
 	var req = http.request(
 	{
 		host: targetHost,
-		path: '/uaa/oauth/authorize?response_type=token&client_id=' + encodeURIComponent(client)  + '&scope=' + encodeURIComponent(scopes) + '&redirect_uri=localhost',
+		path: '/uaa/oauth/authorize?response_type=token&client_id=' + encodeURIComponent(client_id)  + '&scope=openid&redirect_uri=localhost',
 		port: targetPort,
-		/*rejectUnauthorized: false,
-		requestCert: true,
-		agent: false,*/
 		method: 'GET',
 		headers: {'cookie': 'JSESSIONID=' + encodeURIComponent(session)}
 	},
 	function(res)
 	{
-		console.log(scopes);
-		console.log(res.headers['location'] );
+		console.log(res.statusCode);
+		console.log(res.headers);
 		var s = (res.headers['location'] + '').match(/access_token\=(.*?)\&/);
 		if(s != null)
 			s = s[1];
-		cb(s);
+		cb(res.statusCode, s);
 	});
 	req.end();
 }
@@ -140,24 +209,21 @@ var app = connect()
 .use(bodyParser.json())
 .use('/uaa/login', function(req, res, next)
 {
-	if(req.method === 'POST' && req.body['name'] !== undefined && req.body['password'] !== undefined)
+	if(req.method === 'POST' && req.body['name'] != undefined && req.body['password'] != undefined)
 	{
-		loginRequest(req.body['name'], req.body['password'], function(session)
+		loginRequest(req.body['name'], req.body['password'], function(statusCode, session)
 		{
-			authorizeRequest(session, 'cf', 'openid', function(token)
+			if(session != null)
 			{
-				if(token !== null)
-				{
-					res.writeHead(200);
-					res.write('{"session":"' + session + '","token":"' + token + '"}');
-					res.end();
-				}
-				else
-				{
-					res.writeHead(404);
-					res.end();
-				}
-			});
+				res.writeHead(200);
+				res.write('{"session":"' + session + '"}');
+				res.end();
+			}
+			else
+			{
+				res.writeHead(400);
+				res.end();
+			}
 		});
 	}
 	else
@@ -165,23 +231,25 @@ var app = connect()
 })
 .use('/uaa/logout', function (req, res, next)
 {
-	if(req.method === 'POST' && req.body['session'] !== null)
+	if(req.method === 'POST' && req.body['session'] != null)
 	{
 		logoutRequest(req.body['session']);
-		res.writeHead(200);
-		res.end();
-		return;
+		{
+			res.writeHead(200);
+			res.end();
+			return;
+		}
 	}
 	else
 		next();
 })
-.use('/uaa/oauth/authorize', function (req, res, next)
+.use('/uaa/authorize', function (req, res, next)
 {
-	if(req.method === 'POST' && req.body['session'] !== null && req.body['client'] !== null && req.body['scopes'] !== null)
+	if(req.method === 'POST' && req.body['session'] != null && req.body['client_id'] != null)
 	{
-		authorizeRequest(req.body['session'], req.body['client'], req.body['scopes'], function(token)
+		authorizeRequest(req.body['session'], req.body['client_id'], function(statusCode, token)
 		{
-			if(token !== null)
+			if(token != null)
 			{
 				res.writeHead(200);
 				res.write('{"token":"' + token + '"}');
@@ -190,7 +258,7 @@ var app = connect()
 			}
 			else
 			{
-				res.writeHead(404);
+				res.writeHead(400);
 				res.end();
 			}
 		});
@@ -198,31 +266,66 @@ var app = connect()
 	else
 		next();
 })
-/*.use('/api/v1/uaa/Users', function (req, res, next)
+.use('/uaa/users', function (req, res, next)
 {
-	console.log(req.method);
-	if(req.method === 'POST') // && req.body['session'] !== null
-		createUserRequest(req.body['token'], function(token)
+	if(req.method === 'POST' &&  req.body['name'] != null && req.body['password'] != null)
+	{
+		getAdminToken(function(statusCode, token)
 		{
-			res.writeHead(200);
-			res.write(token);
-			res.end();
+			createUserRequest(token.access_token, req.body['name'], req.body['password'], function(statusCode, body)
+			{
+				if(statusCode == 201)
+				{
+					res.writeHead(200);
+					res.end();
+				}
+				else
+				{
+					res.writeHead(400);
+					res.end();
+				}
+			});
 		});
+	}
 	else
 		next();
-})*/
+})
+.use('/uaa/clients', function (req, res, next)
+{
+	console.log(req.body);
+	if(req.method === 'POST' && req.body['client_id'] != null)
+	{
+		getAdminToken(function(statusCode, token)
+		{
+			console.log(token);
+			createClientRequest(token.access_token, req.body['client_id'], function(statusCode, body)
+			{
+				if(statusCode == 201)
+				{
+					res.writeHead(200);
+					res.end();
+				}
+				else
+				{
+					res.writeHead(400);
+					res.end();
+				}
+			});
+		});
+	}
+	else
+		next();
+})
 .use(function (error, req, res, next)
 {
 	if(error)
 	{
 		res.writeHead(406);
-		res.write('');
 		res.end();
 	}
 	else
 	{
 		res.writeHead(500);
-		res.write('');
 		res.end();
 	}
 });
