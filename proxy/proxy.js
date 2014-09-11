@@ -207,7 +207,7 @@ var app = connect()
 	next();
 })
 .use(bodyParser.json())
-.use('/uaa/login', function(req, res, next)
+.use('/uaa/session', function(req, res, next)
 {
 	if(req.method === 'POST' && req.body['name'] != undefined && req.body['password'] != undefined)
 	{
@@ -226,12 +226,7 @@ var app = connect()
 			}
 		});
 	}
-	else
-		next();
-})
-.use('/uaa/logout', function (req, res, next)
-{
-	if(req.method === 'POST' && req.body['session'] != null)
+	else if(req.method === 'DELETE' && req.body['session'] != null)
 	{
 		logoutRequest(req.body['session']);
 		{
