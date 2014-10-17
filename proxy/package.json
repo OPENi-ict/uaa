@@ -22,7 +22,8 @@
 		"body-parser":"",
 		"morgan":"",
 		"raw-body":"",
-		"media-typer":""
+		"media-typer":"",
+		"qs":""
 	},
 	"keywords":[]
 }
