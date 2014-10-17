@@ -8,5 +8,8 @@ echo "drop table authz_approvals; drop table authz_approvals_old; drop table exp
 sudo rm -R /var/lib/tomcat7/webapps/uaa*
 sudo cp uaa/build/libs/cloudfoundry-identity-uaa-1.8.3.war /var/lib/tomcat7/webapps/uaa.war
 
+sudo cp /vagrant/core_bootstrap/static/etc/tomcat7/server.xml /etc/tomcat7/server.xml
+sudo cp /vagrant/core_bootstrap/static/etc/postgresql/9.3/main/pg_hba.conf /etc/postgresql/9.3/main/pg_hba.conf
+
 cd proxy
 npm install --no-bin-links
