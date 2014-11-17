@@ -90,7 +90,7 @@ database:
 
 scim:
   users:
-    - root|fb20c47bffebca63|info@openi-ict.eu|||uaa.user,uaa.admin,scim.write,scim.read,clients.read,clients.write,clients.secret,clients.admin
+    - root|fb20c47bffebca63|info@openi-ict.eu|||openi.*,openi,uaa.user,uaa.admin,scim.write,scim.read,clients.read,clients.write,clients.secret,clients.admin
 
 #password-policy.required-score: 0
 
@@ -116,8 +116,29 @@ jwt:
         MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAKT8kGk6ZNo3sC4IIo29leRLVD23T2r0
         vWXBEkk2pV42HsxKAmPs789AGHH9XwbGpD7FvrcBWWgb65v32Hg/NGkCAwEAAQ==
         -----END PUBLIC KEY-----
-         
-#issuer.uri: http://localhost:8080/uaa
+
+issuer.uri: https://localhost:8080/uaa
+#/uaa
+
+#uaa:
+#  url: /uaa
+#    clientinfo:
+#      url: /uaa/clientinfo
+#    approvals:
+#      url: /uaa/approvals
+#    login:
+#      url: /uaa/authenticate
+#    token:
+#      url: /uaa/oauth/token
+
+#login:
+#  authorize:
+#    url: /uaa/oauth/authorize
+
+#links:
+#  home: /
+#  passwd: /passwd
+#  signup: /signup
 
 oauth:
   client:
@@ -129,8 +150,8 @@ oauth:
     openi:
       id: openi
       secret: fb20c47bffebca63
-      scope: uaa.admin,clients.read,clients.write,clients.secret,scim.read,scim.write,clients.admin,cloud_controller.admin,cloud_controller.read,cloud_controller.write,openid,password.write,scim.read,scim.userids,scim.write
-      authorized-grant-types: implicit,password,refresh_token #,authorization_code,client_credentials
+      scope: openi,openi.*,uaa.admin,clients.read,clients.write,clients.secret,scim.read,scim.write,clients.admin,cloud_controller.admin,cloud_controller.read,cloud_controller.write,openid,password.write,scim.read,scim.userids,scim.write
+      authorized-grant-types: authorization_code,implicit,password,refresh_token #,authorization_code,client_credentials
 #      authorities: uaa.admin,clients.read,clients.write,clients.secret,scim.read,scim.write,clients.admin,cloud_controller.admin,cloud_controller.read,cloud_controller.write,openid,password.write,scim.read,scim.userids,scim.write
       authorities: uaa.none
       autoapprove: true
@@ -138,6 +159,14 @@ oauth:
 #    app:
 #      id: app
 #      secret: fb20c47bffebca63
+    openi-app:
+      id: openi-app
+      secret: fb20c47bffebca63
+      scope: openi,openi.*,uaa.admin,clients.read,clients.write,clients.secret,scim.read,scim.write,clients.admin,cloud_controller.admin,cloud_controller.read,cloud_controller.write,openid,password.write,scim.read,scim.userids,scim.write
+      authorized-grant-types: authorization_code,implicit,password,refresh_token #,authorization_code,client_credentials
+#      authorities: uaa.admin,clients.read,clients.write,clients.secret,scim.read,scim.write,clients.admin,cloud_controller.admin,cloud_controller.read,cloud_controller.write,openid,password.write,scim.read,scim.userids,scim.write
+      authorities: uaa.none
+      override: true
 #    login:
 #      id: login
 #      secret: fb20c47bffebca63
@@ -147,6 +176,7 @@ oauth:
     cf:
       id: cf
       secret: fb20c47bffebca63
+      override: true
       #scope: cloud_controller.admin,cloud_controller.read,cloud_controller.write,openid,password.write,scim.read,scim.userids,scim.write
       #authorized-grant-types: implicit,password,refresh_token
       #authorities: uaa.none
@@ -156,6 +186,8 @@ oauth:
     authorities:
       - openid
       - scim.me
+      - openi
+      - openi.*
 #      - cloud_controller.read
 #      - cloud_controller.write
 #      - cloud_controller_service_permissions.read
