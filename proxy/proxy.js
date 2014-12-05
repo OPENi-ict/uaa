@@ -32,7 +32,7 @@ function loginRequest(user, pass, cb)
 	},
 	function(res)
 	{
-		if(res.headers['location'].indexOf('error') < 0)
+		if(undefined !== res.headers['location'] && res.headers['location'].indexOf('error') < 0)
 			return cb(res.statusCode, (res.headers['set-cookie'] + '').match(/JSESSIONID\=(.*?)\;/)[1]);
 		cb(400);
 	});
